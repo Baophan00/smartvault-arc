@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
-import ClientProviders from "@/components/ClientProviders";
 import { CircleProvider } from "@/contexts/CircleContext";
 
 const dmSans = DM_Sans({
