@@ -7,19 +7,38 @@ import SendForm from "@/components/SendForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import QuickActions from "@/components/QuickActions";
 import NetworkBadge from "@/components/NetworkBadge";
+import WalletSetupModal from "@/components/WalletSetupModal";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"wallet" | "send" | "history">("wallet");
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState("");
+  const [showWalletSetup, setShowWalletSetup] = useState(false);
+
+  const handleWalletCreated = (newAddress: string) => {
+    setAddress(newAddress);
+    setIsConnected(true);
+    setShowWalletSetup(false);
+    setActiveTab("wallet");
+  };
+
+  const handleConnect = (addr: string) => {
+    setAddress(addr);
+    setIsConnected(true);
+  };
+
+  const handleDisconnect = () => {
+    setIsConnected(false);
+    setAddress("");
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header
         isConnected={isConnected}
-        setIsConnected={setIsConnected}
         address={address}
-        setAddress={setAddress}
+        onDisconnect={handleDisconnect}
+        onCreateWallet={() => setShowWalletSetup(true)}
       />
 
       <main className="max-w-md mx-auto px-4 pt-6 pb-24 space-y-5">
@@ -30,6 +49,8 @@ export default function Home() {
         <WalletCard
           isConnected={isConnected}
           address={address}
+          onConnect={handleConnect}
+          onCreateWallet={() => setShowWalletSetup(true)}
         />
 
         {/* Quick Actions */}
@@ -120,6 +141,13 @@ export default function Home() {
           <TransactionHistory isConnected={isConnected} />
         )}
       </main>
+
+      {/* Wallet Setup Modal */}
+      <WalletSetupModal
+        isOpen={showWalletSetup}
+        onClose={() => setShowWalletSetup(false)}
+        onWalletCreated={handleWalletCreated}
+      />
     </div>
   );
 }
