@@ -8,14 +8,14 @@ export default function NetworkBadge() {
       href={ARC_TESTNET.explorerUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-blue-500/5 border border-blue-500/10 text-xs"
+      className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#1b3158]/20 border border-[#2f578c]/20 text-xs hover:bg-[#1b3158]/30 transition-colors"
     >
       <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-        <span className="font-medium text-blue-400">Arc Testnet</span>
-        <span className="text-muted-foreground">· Chain ID: {ARC_TESTNET.chainId}</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#9F72FF] animate-pulse-soft shadow-[0_0_6px_#9F72FF]" />
+        <span className="font-medium text-[#acc6e9]">Arc Testnet</span>
+        <span className="text-[#7a8599]">· Chain ID: {ARC_TESTNET.chainId}</span>
       </div>
-      <span className="text-blue-400/60 hover:text-blue-400 transition-colors">↗</span>
+      <span className="text-[#7a8599] hover:text-[#acc6e9] transition-colors">↗</span>
     </a>
   );
 }
