@@ -2,29 +2,49 @@
 
 import { useState } from "react";
 import { ARC_TESTNET } from "@/lib/config";
+import { useCircle } from "@/contexts/CircleContext";
 
 interface SendFormProps {
   isConnected: boolean;
 }
 
 export default function SendForm({ isConnected }: SendFormProps) {
+  const { wallet } = useCircle();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [token, setToken] = useState<"USDC" | "EURC">("USDC");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [txHash, setTxHash] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSend = async () => {
-    if (!to || !amount) return;
+    if (!to || !amount || !wallet) return;
     setStatus("sending");
+    setErrorMsg("");
 
     try {
-      // Phase 1: simulate send
-      // Phase 2+: integrate @circle-fin/app-kit
-      await new Promise((r) => setTimeout(r, 1500));
-      setTxHash("0x" + "a".repeat(64));
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          privateKey: wallet.privateKey,
+          to,
+          amount,
+          token,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Send failed");
+      }
+
+      setTxHash(data.txHash);
       setStatus("success");
-    } catch {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setErrorMsg(message);
       setStatus("error");
     }
   };
@@ -48,17 +68,19 @@ export default function SendForm({ isConnected }: SendFormProps) {
         <div>
           <h3 className="text-lg font-semibold">Sent successfully!</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            {amount} {token} sent
+            {amount} {token} sent to {to.slice(0, 6)}...{to.slice(-4)}
           </p>
         </div>
-        <a
-          href={`${ARC_TESTNET.explorerUrl}/tx/${txHash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          View on explorer ↗
-        </a>
+        {txHash && (
+          <a
+            href={`${ARC_TESTNET.explorerUrl}/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+          >
+            View on explorer ↗
+          </a>
+        )}
         <button
           onClick={() => {
             setStatus("idle");
@@ -69,6 +91,30 @@ export default function SendForm({ isConnected }: SendFormProps) {
           className="w-full py-2.5 rounded-xl bg-muted text-sm font-medium hover:bg-muted/80 transition-colors"
         >
           Send again
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">Transaction failed</h3>
+          <p className="text-sm text-red-500/80 mt-1">{errorMsg || "Something went wrong"}</p>
+        </div>
+        <button
+          onClick={() => setStatus("idle")}
+          className="w-full py-2.5 rounded-xl bg-muted text-sm font-medium hover:bg-muted/80 transition-colors"
+        >
+          Try again
         </button>
       </div>
     );
@@ -141,6 +187,10 @@ export default function SendForm({ isConnected }: SendFormProps) {
           <span>Arrival time</span>
           <span className="font-medium">&lt; 1 second</span>
         </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Network</span>
+          <span className="font-medium">Arc Testnet</span>
+        </div>
       </div>
 
       {/* Send button */}
@@ -155,7 +205,7 @@ export default function SendForm({ isConnected }: SendFormProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            Sending...
+            Sending on Arc Testnet...
           </span>
         ) : (
           `Send ${amount || "0"} ${token}`

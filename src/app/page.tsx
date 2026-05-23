@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import WalletCard from "@/components/WalletCard";
 import SendForm from "@/components/SendForm";
@@ -8,28 +8,52 @@ import TransactionHistory from "@/components/TransactionHistory";
 import QuickActions from "@/components/QuickActions";
 import NetworkBadge from "@/components/NetworkBadge";
 import WalletSetupModal from "@/components/WalletSetupModal";
+import { useCircle } from "@/contexts/CircleContext";
 
 export default function Home() {
+  const { wallet, createLocalWallet, importWallet } = useCircle();
   const [activeTab, setActiveTab] = useState<"wallet" | "send" | "history">("wallet");
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState("");
   const [showWalletSetup, setShowWalletSetup] = useState(false);
 
+  // Restore wallet from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("smartvault_wallet");
+    if (saved) {
+      try {
+        const { address: savedAddr, privateKey } = JSON.parse(saved);
+        if (savedAddr && privateKey) {
+          importWallet(privateKey);
+          setAddress(savedAddr);
+          setIsConnected(true);
+        }
+      } catch {
+        // Invalid saved wallet, ignore
+      }
+    }
+  }, [importWallet]);
+
   const handleWalletCreated = (newAddress: string) => {
-    setAddress(newAddress);
+    // If the modal didn't generate the address, create one now
+    if (newAddress === "generating..." || !newAddress) {
+      const w = createLocalWallet();
+      setAddress(w.address);
+    } else {
+      setAddress(newAddress);
+    }
     setIsConnected(true);
     setShowWalletSetup(false);
     setActiveTab("wallet");
   };
 
-  const handleConnect = (addr: string) => {
-    setAddress(addr);
-    setIsConnected(true);
-  };
-
   const handleDisconnect = () => {
     setIsConnected(false);
     setAddress("");
+    if (wallet) {
+      // Clear saved wallet from localStorage
+      localStorage.removeItem("smartvault_wallet");
+    }
   };
 
   return (
@@ -49,7 +73,6 @@ export default function Home() {
         <WalletCard
           isConnected={isConnected}
           address={address}
-          onConnect={handleConnect}
           onCreateWallet={() => setShowWalletSetup(true)}
         />
 
