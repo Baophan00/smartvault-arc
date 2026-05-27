@@ -109,9 +109,41 @@ export async function POST(req: NextRequest) {
       // Combine and sort
       const ALL_LOGS = [...logs, ...incomingLogs].slice(0, 10);
 
+      // Collect unique block numbers to fetch timestamps in batch
+      const uniqueBlocks = new Set<string>();
+      for (const log of ALL_LOGS) {
+        if (log.blockNumber) uniqueBlocks.add(log.blockNumber.toString());
+      }
+      const blockCache = new Map<string, number>();
+      const now = Math.floor(Date.now() / 1000);
+
+      await Promise.all(
+        Array.from(uniqueBlocks).map(async (blockNumStr) => {
+          try {
+            const block = await client.getBlock({
+              blockNumber: BigInt(blockNumStr),
+            });
+            blockCache.set(blockNumStr, Number(block.timestamp));
+          } catch {
+            blockCache.set(blockNumStr, now);
+          }
+        })
+      );
+
       for (const log of ALL_LOGS) {
         const isSend = log.args.from?.toLowerCase() === address.toLowerCase();
-        const tx = await client.getTransaction({ hash: log.transactionHash });
+        const blockTs = log.blockNumber
+          ? blockCache.get(log.blockNumber.toString()) || now
+          : now;
+        const secondsAgo = now - blockTs;
+        const timeAgo =
+          secondsAgo < 60
+            ? `${secondsAgo}s ago`
+            : secondsAgo < 3600
+            ? `${Math.floor(secondsAgo / 60)}m ago`
+            : secondsAgo < 86400
+            ? `${Math.floor(secondsAgo / 3600)}h ago`
+            : `${Math.floor(secondsAgo / 86400)}d ago`;
         transactions.push({
           hash: `${log.transactionHash.slice(0, 10)}...`,
           type: isSend ? "send" : "receive",
@@ -119,7 +151,7 @@ export async function POST(req: NextRequest) {
           token: "USDC",
           from: `${(log.args.from || "").slice(0, 8)}...`,
           to: `${(log.args.to || "").slice(0, 8)}...`,
-          time: `${Math.floor(Math.random() * 60)} min ago`, // approximate
+          time: timeAgo,
           status: "confirmed",
         });
       }

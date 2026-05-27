@@ -78,7 +78,7 @@ export default function HomeContent() {
       const data = await res.json();
       if (data.success) {
         setBalances(data.balances);
-        if (data.transactions) {
+        if (data.transactions?.length) {
           setTransactions(data.transactions);
         }
       }
