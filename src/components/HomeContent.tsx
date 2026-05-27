@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import WalletCard from "@/components/WalletCard";
 import SendForm from "@/components/SendForm";
+import BridgeForm from "@/components/BridgeForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import QuickActions from "@/components/QuickActions";
 import NetworkBadge from "@/components/NetworkBadge";
 import WalletSetupModal from "@/components/WalletSetupModal";
+import ExportWalletModal from "@/components/ExportWalletModal";
 import { useCircle } from "@/contexts/CircleContext";
 
 interface BalanceData {
@@ -31,15 +33,17 @@ interface Transaction {
 const TABS = [
   { id: "wallet" as const, label: "Wallet" },
   { id: "send" as const, label: "Send" },
+  { id: "bridge" as const, label: "Bridge" },
   { id: "history" as const, label: "History" },
 ];
 
 export default function HomeContent() {
   const { wallet, createLocalWallet, importWallet } = useCircle();
-  const [activeTab, setActiveTab] = useState<"wallet" | "send" | "history">("wallet");
+  const [activeTab, setActiveTab] = useState<"wallet" | "send" | "bridge" | "history">("wallet");
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState("");
   const [showWalletSetup, setShowWalletSetup] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [balances, setBalances] = useState<BalanceData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,19 +92,13 @@ export default function HomeContent() {
   useEffect(() => {
     if (isConnected && address) {
       fetchBalances();
-      // Refresh every 30 seconds
       const interval = setInterval(fetchBalances, 30000);
       return () => clearInterval(interval);
     }
   }, [isConnected, address, fetchBalances]);
 
   const handleWalletCreated = (newAddress: string) => {
-    let addr = newAddress;
-    if (newAddress === "generating..." || !newAddress) {
-      const w = createLocalWallet();
-      addr = w.address;
-    }
-    setAddress(addr);
+    setAddress(newAddress);
     setIsConnected(true);
     setShowWalletSetup(false);
     setActiveTab("wallet");
@@ -111,9 +109,7 @@ export default function HomeContent() {
     setAddress("");
     setBalances(null);
     setTransactions([]);
-    if (wallet) {
-      localStorage.removeItem("smartvault_wallet");
-    }
+    localStorage.removeItem("smartvault_wallet");
   };
 
   return (
@@ -123,6 +119,7 @@ export default function HomeContent() {
         address={address}
         onDisconnect={handleDisconnect}
         onCreateWallet={() => setShowWalletSetup(true)}
+        onExport={() => setShowExport(true)}
       />
 
       <main className="max-w-md mx-auto px-4 pt-5 pb-24 space-y-5">
@@ -150,6 +147,7 @@ export default function HomeContent() {
           isConnected={isConnected}
           address={address}
           onSend={() => setActiveTab("send")}
+          onBridge={() => setActiveTab("bridge")}
         />
 
         {/* Tab Navigation */}
@@ -181,7 +179,6 @@ export default function HomeContent() {
               {[
                 { symbol: "USDC", name: "USD Coin", balance: balances?.USDC || "—", color: "text-[#acc6e9]", icon: "$" },
                 { symbol: "EURC", name: "Euro Coin", balance: balances?.EURC || "—", color: "text-[#e9a13f]", icon: "€" },
-                { symbol: "USYC", name: "Yield-bearing", balance: "5,000.00", color: "text-[#9F72FF]", icon: "⟠" },
               ].map((token) => (
                 <div
                   key={token.symbol}
@@ -218,6 +215,13 @@ export default function HomeContent() {
           />
         )}
 
+        {activeTab === "bridge" && (
+          <BridgeForm
+            isConnected={isConnected}
+            balance={balances?.USDC}
+          />
+        )}
+
         {activeTab === "history" && (
           <TransactionHistory
             isConnected={isConnected}
@@ -230,6 +234,11 @@ export default function HomeContent() {
         isOpen={showWalletSetup}
         onClose={() => setShowWalletSetup(false)}
         onWalletCreated={handleWalletCreated}
+      />
+
+      <ExportWalletModal
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
       />
     </div>
   );

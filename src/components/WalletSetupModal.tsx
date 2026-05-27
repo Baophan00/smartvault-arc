@@ -80,17 +80,16 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
           Welcome to SmartVault
         </h2>
         <p className="text-sm text-[#7a8599] max-w-xs mx-auto">
-          Create a wallet secured by your <span className="text-[#acc6e9]">Face ID</span> or{" "}
-          <span className="text-[#acc6e9]">fingerprint</span>. No seed phrases.
+          Create a wallet secured by a <span className="text-[#acc6e9]">private key</span> stored on your device. No seed phrases.
         </p>
       </div>
 
       <div className="space-y-2">
         {[
-          { label: "BIOMETRIC SECURITY", desc: "Face ID / Touch ID" },
+          { label: "SELF-CUSTODIAL", desc: "Private key on your device" },
           { label: "GAS-FREE", desc: "Sponsored transactions on Arc" },
-          { label: "CROSS-CHAIN", desc: "Unified USDC balance" },
-          { label: "RECOVERABLE", desc: "Restore via phone + OTP" },
+          { label: "CROSS-CHAIN", desc: "Bridge USDC via CCTP" },
+          { label: "NO SEED PHRASE", desc: "Export raw private key" },
         ].map((f, i) => (
           <div key={i} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#141a24] border border-[#1e2640]">
             <span className="text-xs text-[#acc6e9] arc-label">{f.label}</span>
@@ -155,7 +154,7 @@ function SuccessStep({ address, onDone }: { address: string; onDone: () => void 
           Wallet created
         </h2>
         <p className="text-sm text-[#7a8599]">
-          Your SmartVault is ready
+          Your SmartVault is ready. Export your private key to back up.
         </p>
       </div>
 

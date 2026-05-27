@@ -5,10 +5,11 @@ import { useState } from "react";
 interface QuickActionsProps {
   isConnected: boolean;
   onSend: () => void;
+  onBridge: () => void;
   address?: string;
 }
 
-export default function QuickActions({ isConnected, onSend, address }: QuickActionsProps) {
+export default function QuickActions({ isConnected, onSend, onBridge, address }: QuickActionsProps) {
   const [copied, setCopied] = useState(false);
 
   const handleReceive = () => {
@@ -69,9 +70,8 @@ export default function QuickActions({ isConnected, onSend, address }: QuickActi
           <line x1="14" y1="1" x2="14" y2="4" />
         </svg>
       ),
-      onClick: () => {},
-      color: "bg-[#1b3158]/50 text-[#7a8599] group-hover:bg-[#2f578c]/30",
-      disabled: true,
+      onClick: onBridge,
+      color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
     },
     {
       label: "Swap",
