@@ -117,7 +117,7 @@ export default function WalletCard({ isConnected, address, balance, loading, onC
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Passkey
+                Self-Custodial
               </p>
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function WalletCard({ isConnected, address, balance, loading, onC
             <div className="flex-1">
               <p className="text-sm font-medium text-[#e8ecf0]">Create a SmartVault</p>
               <p className="text-xs text-[#7a8599]">
-                Secured by Face ID / Passkey. No seed phrase.
+                Self-custodial. Private key on your device.
               </p>
             </div>
             <svg className="text-[#7a8599] group-hover:text-[#acc6e9] transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

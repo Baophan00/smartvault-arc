@@ -6,10 +6,11 @@ interface QuickActionsProps {
   isConnected: boolean;
   onSend: () => void;
   onBridge: () => void;
+  onSwap: () => void;
   address?: string;
 }
 
-export default function QuickActions({ isConnected, onSend, onBridge, address }: QuickActionsProps) {
+export default function QuickActions({ isConnected, onSend, onBridge, onSwap, address }: QuickActionsProps) {
   const [copied, setCopied] = useState(false);
 
   const handleReceive = () => {
@@ -83,9 +84,8 @@ export default function QuickActions({ isConnected, onSend, onBridge, address }:
           <path d="M21 13v2a4 4 0 0 1-4 4H3" />
         </svg>
       ),
-      onClick: () => {},
-      color: "bg-[#1b3158]/50 text-[#7a8599] group-hover:bg-[#2f578c]/30",
-      disabled: true,
+      onClick: onSwap,
+      color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
     },
   ];
 
@@ -101,8 +101,6 @@ export default function QuickActions({ isConnected, onSend, onBridge, address }:
             title={
               !isConnected
                 ? "Connect wallet first"
-                : action.disabled
-                ? "Coming soon"
                 : action.label === "Receive"
                 ? "Copy wallet address"
                 : ""

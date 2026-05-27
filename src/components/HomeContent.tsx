@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import WalletCard from "@/components/WalletCard";
 import SendForm from "@/components/SendForm";
 import BridgeForm from "@/components/BridgeForm";
+import SwapForm from "@/components/SwapForm";
 import TransactionHistory from "@/components/TransactionHistory";
 import QuickActions from "@/components/QuickActions";
 import NetworkBadge from "@/components/NetworkBadge";
@@ -34,12 +35,13 @@ const TABS = [
   { id: "wallet" as const, label: "Wallet" },
   { id: "send" as const, label: "Send" },
   { id: "bridge" as const, label: "Bridge" },
+  { id: "swap" as const, label: "Swap" },
   { id: "history" as const, label: "History" },
 ];
 
 export default function HomeContent() {
   const { wallet, createLocalWallet, importWallet } = useCircle();
-  const [activeTab, setActiveTab] = useState<"wallet" | "send" | "bridge" | "history">("wallet");
+  const [activeTab, setActiveTab] = useState<"wallet" | "send" | "bridge" | "swap" | "history">("wallet");
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState("");
   const [showWalletSetup, setShowWalletSetup] = useState(false);
@@ -148,6 +150,7 @@ export default function HomeContent() {
           address={address}
           onSend={() => setActiveTab("send")}
           onBridge={() => setActiveTab("bridge")}
+          onSwap={() => setActiveTab("swap")}
         />
 
         {/* Tab Navigation */}
@@ -219,6 +222,13 @@ export default function HomeContent() {
           <BridgeForm
             isConnected={isConnected}
             balance={balances?.USDC}
+          />
+        )}
+
+        {activeTab === "swap" && (
+          <SwapForm
+            isConnected={isConnected}
+            usdcBalance={balances?.USDC}
           />
         )}
 
