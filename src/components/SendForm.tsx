@@ -43,15 +43,22 @@ export default function SendForm({ isConnected, usdcBalance, eurcBalance }: Send
       };
 
       const estimate = await kit.estimateSend(params);
-      const gasStr = estimate?.gas
-        ? `~${estimate.gas} gas`
-        : "$0.00 (sponsored)";
-      setEstimates({ fee: gasStr });
+
+      // Convert fee from wei (18-decimal USDC) to USDC amount
+      let feeDisplay = "≈ $0.00";
+      if (estimate?.fee) {
+        const feeWei = BigInt(estimate.fee);
+        if (feeWei > BigInt(0)) {
+          const feeUsdc = Number(feeWei) / 1e18;
+          feeDisplay = `≈ $${feeUsdc.toFixed(6)} USDC`;
+        }
+      }
+      setEstimates({ fee: feeDisplay });
       setStatus("confirm");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      // If estimation fails, allow proceeding anyway with default fee
-      setEstimates({ fee: "$0.00 (sponsored)" });
+      const message = err instanceof Error ? err.message : "";
+      // If estimation fails, show minimal fee
+      setEstimates({ fee: "≈ $0.00" });
       setStatus("confirm");
       console.warn("Estimate failed, proceeding:", message);
     }

@@ -58,11 +58,10 @@ export default function BridgeForm({ isConnected, balance }: BridgeFormProps) {
       };
 
       await kit.estimateBridge(params);
-      setEstimates({ fee: "$0.00 (sponsored)" });
+      setEstimates({ fee: "≈ $0.00" });
       setStatus("confirm");
-    } catch (err: unknown) {
-      // Allow proceeding even if estimate fails
-      setEstimates({ fee: "$0.00 (sponsored)" });
+    } catch {
+      setEstimates({ fee: "≈ $0.00" });
       setStatus("confirm");
     }
   };
