@@ -312,7 +312,7 @@ export default function BridgeForm({ isConnected, balance }: BridgeFormProps) {
         toValue={`${destLabel}\n${recipient.slice(0, 6)}...${recipient.slice(-4)}`}
         amount={amount}
         token="USDC"
-        fee={estimates?.fee || "$0.00 (sponsored)"}
+        fee={estimates?.fee || "—"}
         extraInfo={[
           { label: "Protocol", value: "CCTP v2" },
           { label: "Confirmations", value: "~1 block" },

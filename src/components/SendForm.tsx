@@ -304,7 +304,7 @@ export default function SendForm({ isConnected, usdcBalance, eurcBalance }: Send
         toValue={to}
         amount={amount}
         token={token}
-        fee={estimates?.fee || "$0.00 (sponsored)"}
+        fee={estimates?.fee || "—"}
         isLoading={status === "sending"}
         loadingLabel="Sending on Arc Testnet..."
         onConfirm={handleConfirmSend}

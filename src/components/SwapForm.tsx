@@ -32,11 +32,10 @@ function createRpcProvider(rpcUrl: string) {
   };
 }
 
+// Only USDC and EURC are available as swap tokens on Arc Testnet
 const SWAP_TOKENS = [
   { symbol: "USDC", name: "USD Coin" },
-  { symbol: "USDT", name: "USDT" },
   { symbol: "EURC", name: "Euro Coin" },
-  { symbol: "NATIVE", name: "ARC (Native)" },
 ];
 
 interface SwapFormProps {
@@ -47,9 +46,9 @@ interface SwapFormProps {
 export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
   const { wallet } = useCircle();
   const [tokenIn, setTokenIn] = useState("USDC");
-  const [tokenOut, setTokenOut] = useState("USDT");
+  const [tokenOut, setTokenOut] = useState("EURC");
   const [amountIn, setAmountIn] = useState("");
-  const [slippage, setSlippage] = useState("0.5"); // percentage
+  const [slippage, setSlippage] = useState("0.5");
   const [status, setStatus] = useState<"idle" | "estimating" | "confirm" | "swapping" | "success" | "error">("idle");
   const [txHash, setTxHash] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -60,6 +59,7 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
   } | null>(null);
 
   const slippageBps = Math.round(parseFloat(slippage || "0.5") * 100);
+  const kitKey = process.env.NEXT_PUBLIC_KIT_KEY || "";
 
   const getAdapter = useCallback(() => {
     if (!wallet?.privateKey) return null;
@@ -88,23 +88,23 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
         tokenIn,
         tokenOut,
         amountIn,
-        config: { slippageBps },
+        config: { slippageBps, kitKey },
       };
 
       const estimate: any = await kit.estimateSwap(params);
 
-      // Build output amount display from estimate
       let outputDisplay = "—";
       if (estimate?.estimatedOutput?.amount) {
         outputDisplay = estimate.estimatedOutput.amount;
       }
 
-      // Parse fees
+      // Parse fees: combine provider fees + gas fees
       let feeDisplay = "≈ $0.00";
       const fees = estimate?.fees;
       if (fees && fees.length > 0) {
         const totalFee = fees.reduce((sum: number, f: any) => {
-          return sum + parseFloat(f.amount || "0");
+          const amt = parseFloat(f.amount || "0");
+          return isNaN(amt) ? sum : sum + amt;
         }, 0);
         if (totalFee > 0) {
           feeDisplay = `≈ $${totalFee.toFixed(6)}`;
@@ -118,16 +118,11 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
       });
       setStatus("confirm");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "";
-      console.warn("Swap estimate failed, proceeding with defaults:", message);
-      setEstimateResult({
-        estimatedOutput: "—",
-        fee: "≈ $0.00",
-        slippageBps,
-      });
-      setStatus("confirm");
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setErrorMsg(message);
+      setStatus("error");
     }
-  }, [amountIn, tokenIn, tokenOut, slippageBps, wallet, getAdapter]);
+  }, [amountIn, tokenIn, tokenOut, slippageBps, kitKey, wallet, getAdapter]);
 
   const handleConfirmSwap = useCallback(async () => {
     if (!amountIn || !wallet) return;
@@ -142,7 +137,7 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
         tokenIn,
         tokenOut,
         amountIn,
-        config: { slippageBps },
+        config: { slippageBps, kitKey },
       };
 
       const result: any = await kit.swap(params);
@@ -153,7 +148,7 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
       setErrorMsg(message);
       setStatus("error");
     }
-  }, [amountIn, tokenIn, tokenOut, slippageBps, wallet, getAdapter]);
+  }, [amountIn, tokenIn, tokenOut, slippageBps, kitKey, wallet, getAdapter]);
 
   if (!isConnected) {
     return (
@@ -365,7 +360,7 @@ export default function SwapForm({ isConnected, usdcBalance }: SwapFormProps) {
         toValue={estimateResult?.estimatedOutput || "—"}
         amount={amountIn}
         token={tokenIn}
-        fee={estimateResult?.fee || "≈ $0.00"}
+        fee={estimateResult?.fee || "—"}
         extraInfo={[
           { label: "Output", value: `${estimateResult?.estimatedOutput || "—"} ${tokenOut}` },
           { label: "Slippage", value: `${slippage}%` },
