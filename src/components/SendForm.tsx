@@ -6,9 +6,11 @@ import { useCircle } from "@/contexts/CircleContext";
 
 interface SendFormProps {
   isConnected: boolean;
+  usdcBalance?: string;
+  eurcBalance?: string;
 }
 
-export default function SendForm({ isConnected }: SendFormProps) {
+export default function SendForm({ isConnected, usdcBalance, eurcBalance }: SendFormProps) {
   const { wallet } = useCircle();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -178,7 +180,7 @@ export default function SendForm({ isConnected }: SendFormProps) {
           </span>
         </div>
         <p className="text-xs text-[#7a8599]">
-          Balance: {token === "USDC" ? "1,250.50" : "250.00"} {token}
+          Balance: {token === "USDC" ? (usdcBalance || "0") : (eurcBalance || "0")} {token}
         </p>
       </div>
 

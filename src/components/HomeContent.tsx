@@ -148,6 +148,7 @@ export default function HomeContent() {
         {/* Quick Actions */}
         <QuickActions
           isConnected={isConnected}
+          address={address}
           onSend={() => setActiveTab("send")}
         />
 
@@ -210,7 +211,11 @@ export default function HomeContent() {
         )}
 
         {activeTab === "send" && (
-          <SendForm isConnected={isConnected} />
+          <SendForm
+            isConnected={isConnected}
+            usdcBalance={balances?.USDC}
+            eurcBalance={balances?.EURC}
+          />
         )}
 
         {activeTab === "history" && (

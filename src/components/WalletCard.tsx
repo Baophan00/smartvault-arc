@@ -1,6 +1,7 @@
 "use client";
 
 import { truncateAddress } from "@/lib/utils";
+import { useState } from "react";
 
 interface WalletCardProps {
   isConnected: boolean;
@@ -12,6 +13,25 @@ interface WalletCardProps {
 }
 
 export default function WalletCard({ isConnected, address, balance, loading, onCreateWallet }: WalletCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!address) return;
+    navigator.clipboard.writeText(address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      const textArea = document.createElement("textarea");
+      textArea.value = address;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div className="relative overflow-hidden rounded-3xl arc-glow-blue">
       {/* Premium gradient card — ARC-inspired */}
@@ -66,7 +86,22 @@ export default function WalletCard({ isConnected, address, balance, loading, onC
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="arc-label text-[#7a8599] mb-1">ADDRESS</p>
-              <p className="text-xs font-mono text-[#acc6e9]">{truncateAddress(address, 6)}</p>
+              <button
+                onClick={handleCopy}
+                className="text-xs font-mono text-[#acc6e9] hover:text-[#9F72FF] transition-colors flex items-center gap-1.5"
+              >
+                {truncateAddress(address, 6)}
+                {copied ? (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9F72FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                )}
+              </button>
             </div>
             <div>
               <p className="arc-label text-[#7a8599] mb-1">NETWORK</p>

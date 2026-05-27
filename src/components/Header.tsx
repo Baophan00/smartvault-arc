@@ -12,6 +12,7 @@ interface HeaderProps {
 
 export default function Header({ isConnected, address, onDisconnect, onCreateWallet }: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-[#0a0d14]/90 backdrop-blur-xl border-b border-[#1e2640]/60">
@@ -60,6 +61,30 @@ export default function Header({ isConnected, address, onDisconnect, onCreateWal
                       Arc Testnet
                     </p>
                   </div>
+                  {copied ? (
+                    <div className="px-4 py-2.5 text-sm text-[#9F72FF] flex items-center gap-2 border-b border-[#1e2640]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      Copied!
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(address).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#acc6e9] hover:bg-[#1e2640]/50 transition-colors flex items-center gap-2 border-b border-[#1e2640]"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                      Copy Address
+                    </button>
+                  )}
                   <button
                     onClick={() => { setShowMenu(false); onDisconnect(); }}
                     className="w-full px-4 py-2.5 text-left text-sm text-[#e9a13f] hover:bg-[#1e2640]/50 transition-colors flex items-center gap-2"

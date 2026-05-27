@@ -1,11 +1,34 @@
 "use client";
 
+import { useState } from "react";
+
 interface QuickActionsProps {
   isConnected: boolean;
   onSend: () => void;
+  address?: string;
 }
 
-export default function QuickActions({ isConnected, onSend }: QuickActionsProps) {
+export default function QuickActions({ isConnected, onSend, address }: QuickActionsProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleReceive = () => {
+    if (!address) return;
+    navigator.clipboard.writeText(address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Fallback: select text manually
+      const textArea = document.createElement("textarea");
+      textArea.value = address;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const actions = [
     {
       label: "Send",
@@ -19,15 +42,21 @@ export default function QuickActions({ isConnected, onSend }: QuickActionsProps)
       color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
     },
     {
-      label: "Receive",
-      icon: (
+      label: copied ? "Copied!" : "Receive",
+      icon: copied ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
           <polyline points="19 12 12 19 5 12" />
         </svg>
       ),
-      onClick: () => {},
-      color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
+      onClick: handleReceive,
+      color: copied
+        ? "bg-[#2f578c] text-[#9F72FF] group-hover:bg-[#2f578c]"
+        : "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
     },
     {
       label: "Bridge",
@@ -41,7 +70,8 @@ export default function QuickActions({ isConnected, onSend }: QuickActionsProps)
         </svg>
       ),
       onClick: () => {},
-      color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
+      color: "bg-[#1b3158]/50 text-[#7a8599] group-hover:bg-[#2f578c]/30",
+      disabled: true,
     },
     {
       label: "Swap",
@@ -54,7 +84,8 @@ export default function QuickActions({ isConnected, onSend }: QuickActionsProps)
         </svg>
       ),
       onClick: () => {},
-      color: "bg-[#1b3158] text-[#acc6e9] group-hover:bg-[#2f578c]",
+      color: "bg-[#1b3158]/50 text-[#7a8599] group-hover:bg-[#2f578c]/30",
+      disabled: true,
     },
   ];
 
@@ -67,6 +98,15 @@ export default function QuickActions({ isConnected, onSend }: QuickActionsProps)
             onClick={action.onClick}
             disabled={!isConnected}
             className="flex flex-col items-center gap-2 disabled:opacity-25 disabled:cursor-not-allowed group"
+            title={
+              !isConnected
+                ? "Connect wallet first"
+                : action.disabled
+                ? "Coming soon"
+                : action.label === "Receive"
+                ? "Copy wallet address"
+                : ""
+            }
           >
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${action.color}`}>
               {action.icon}
