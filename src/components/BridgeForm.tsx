@@ -86,8 +86,21 @@ export default function BridgeForm({ isConnected, balance }: BridgeFormProps) {
         token: "USDC" as const,
       };
 
-      await kit.estimateBridge(params);
-      setEstimates({ fee: "≈ $0.00" });
+      const estimate = await kit.estimateBridge(params);
+
+      // Convert fee from wei (18-decimal USDC) to USDC amount
+      let feeDisplay = "≈ $0.00";
+      if (estimate && typeof estimate === "object") {
+        const feeVal = (estimate as any).fee;
+        if (feeVal) {
+          const feeWei = BigInt(feeVal);
+          if (feeWei > BigInt(0)) {
+            const feeUsdc = Number(feeWei) / 1e18;
+            feeDisplay = `≈ $${feeUsdc.toFixed(6)} USDC`;
+          }
+        }
+      }
+      setEstimates({ fee: feeDisplay });
       setStatus("confirm");
     } catch {
       setEstimates({ fee: "≈ $0.00" });
