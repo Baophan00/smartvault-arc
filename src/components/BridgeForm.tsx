@@ -6,8 +6,31 @@ import { ARC_TESTNET } from "@/lib/config";
 import ConfirmModal from "@/components/ConfirmModal";
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromPrivateKey } from "@circle-fin/adapter-viem-v2";
+import { createWalletClient, custom } from "viem";
 
 const kit = new AppKit();
+
+// Custom EIP-1193 provider: wraps HTTP RPC but handles wallet methods as no-op
+function createRpcProvider(rpcUrl: string) {
+  return {
+    request: async ({ method, params }: { method: string; params?: unknown[] }) => {
+      if (
+        method === "wallet_switchEthereumChain" ||
+        method === "wallet_addEthereumChain"
+      ) {
+        return null;
+      }
+      const res = await fetch(rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", method, params, id: Date.now() }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data.result;
+    },
+  };
+}
 
 const BRIDGE_DESTINATIONS = [
   { value: "Ethereum_Sepolia", label: "Ethereum Sepolia" },
@@ -44,6 +67,12 @@ export default function BridgeForm({ isConnected, balance }: BridgeFormProps) {
     try {
       const adapter = createViemAdapterFromPrivateKey({
         privateKey: wallet.privateKey,
+        getWalletClient: ({ chain, account }) =>
+          createWalletClient({
+            account,
+            chain,
+            transport: custom(createRpcProvider(chain.rpcUrls.default.http[0])),
+          }),
       });
 
       const params: any = {
@@ -73,6 +102,12 @@ export default function BridgeForm({ isConnected, balance }: BridgeFormProps) {
     try {
       const adapter = createViemAdapterFromPrivateKey({
         privateKey: wallet.privateKey,
+        getWalletClient: ({ chain, account }) =>
+          createWalletClient({
+            account,
+            chain,
+            transport: custom(createRpcProvider(chain.rpcUrls.default.http[0])),
+          }),
       });
 
       const params: any = {
